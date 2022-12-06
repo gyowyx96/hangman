@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class String
   def black
     "\e[30m#{self}\e[0m"
@@ -98,6 +100,7 @@ module Tools
 
   private
 
+  # save the game
   def save(code)
     Dir.mkdir('saved') unless Dir.exist?('saved')
 
@@ -110,6 +113,7 @@ module Tools
     File.open(filename, 'w') { |file| file.write(saved_variables.to_yaml) }
   end
 
+  # wait for an input of the player and check it
   def ask_for_letter(code)
     @letter = gets.chomp.to_s.downcase
     if @letter == 'save'
@@ -117,6 +121,7 @@ module Tools
       save(code)
       exit
     end
+    exit if @letter == 'quit'
     if @letter.length != 1 || !@alphabet.include?(@letter)
       print "\nWrong input, or used letter, try again: "
       return ask_for_letter(code)
@@ -125,18 +130,20 @@ module Tools
     @letter
   end
 
+  # let you play the game for a pre-imposted number of rounds
   def play_game(code)
-    until @tries == 0 || @end == true
+    until @tries.zero? || @end == true
       puts "\nTry left: #{@tries}\n\n"
-      print 'Give me a letter: '
+      print 'Type a letter to play, save, or quit: '
       ask_for_letter(code)
       play_round(@letter, code)
     end
     return unless @end == false
 
-    print "Loooooser!\nThis was the secret word: "
+    looser_banner
+    print "\nThis was the secret word: "
     show_code(code)
-    puts @red_separator
+    replay
   end
 
   def play_round(letter, code)
@@ -152,6 +159,7 @@ end
 module Display
   private
 
+  # update the display after the move of the player
   def update_diplay(input, code)
     if code.include?(input)
       @used_letters.push(input.green)
@@ -186,8 +194,7 @@ module Display
     input = input.join('')
     return unless code == input
 
-    puts @red_separator
-    puts "\nYOU WON!!!"
+    winner_banner
     @end = true
   end
 
@@ -197,5 +204,28 @@ module Display
       @hangman_word.push('_')
     end
     @hangman_word
+  end
+
+  def winner_banner
+    upper = '           '.bg_green
+    text = 'YOU WON'.cyan
+    green = ' '.bg_green
+    puts
+    puts "#{upper}\n#{green}         #{green}\n#{green} #{text} #{green}\n#{green}         #{green}\n#{upper}"
+  end
+
+  def looser_banner
+    upper = '            '.bg_red
+    text = 'YOU LOST'.blue
+    red = ' '.bg_red
+    puts "#{upper}\n#{red}          #{red}\n#{red} #{text} #{red}\n#{red}          #{red}\n#{upper}"
+  end
+
+  def replay
+    print 'Do you wanna play again? y/n: '
+    asked_input = gets.chomp.capitalize!.slice(0)
+    return puts 'It was a pleasure to play with you bye bye !' unless asked_input == 'Y'
+
+    Game.new
   end
 end

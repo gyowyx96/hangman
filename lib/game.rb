@@ -32,7 +32,7 @@ class Game < Word
     variable
     show_space(create_space(@@code))
     play_game(@@code)
-    exit
+    replay
   end
 end
 
@@ -72,6 +72,7 @@ class Savings < Game
   def get_saved_files
     saved = Dir.open('saved').children
     if saved.empty?
+      puts @red_separator
       puts "No savings found, play a new game!\n"
       puts @red_separator
       return Game.new
