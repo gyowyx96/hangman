@@ -86,18 +86,59 @@ end
 
 module Tools
 
-  def variable 
+  def variable
     @@dictionary = File.open('dictionary.txt').to_a
     @hangman_word = []
     @alphabet = ("a".."z").to_a
     @used_letters = []
-    @tries = 10
+    @tries = 6
     @separator = "                                                          ".bg_cyan
     @red_separator = "                                                          ".bg_red
-    @end = false
+    @end = false    
   end
 
   private
+
+  def save(code)
+    Dir.mkdir("saved") unless Dir.exist?("saved")
+
+    print "What name do you wanna give to yours saves: "
+    name = gets.chomp
+    filename = "saved/load_#{name}.yaml"
+
+    saved_variables = [code, @alphabet, @tries, @hangman_word, @used_letters]
+    
+    File.open(filename, "w") { |file| file.write(saved_variables.to_yaml) }
+  end
+
+  def ask_for_letter(code)
+    @letter = gets.chomp.to_s.downcase
+    if @letter == "save"
+      puts "\nSaving...."
+      save(code)
+      exit
+    end
+    if @letter.length != 1 || !@alphabet.include?(@letter)
+      print "\nWrong input, or used letter, try again: "      
+     return ask_for_letter(code)
+    end
+    @alphabet.delete(@letter)
+    @letter
+  end 
+
+  def play_game(code)
+    until @tries == 0 || @end == true do
+      puts "\nTry left: #{@tries}\n\n"
+      print "Give me a letter: "
+      ask_for_letter(code)
+      play_round(@letter,code)      
+    end
+    if @end == false
+    print "Loooooser!\nThis was the secret word: "
+    show_code(code)
+    puts @red_separator
+    end
+  end
 
   def play_round(letter, code)
     puts
@@ -107,6 +148,12 @@ module Tools
     puts
     puts @separator
   end
+
+end
+
+module Display
+
+  private
 
   def update_diplay(input, code)
     if code.include?(input)
@@ -134,6 +181,17 @@ module Tools
   
   def show_code(code)
     puts code.join("")
+  end
+
+  def win_condition(code, input)
+    code.delete("\n")
+    code = code.join("")
+    input = input.join("")
+    if code == input
+      puts @red_separator
+      puts "\nHAI VINTO!!!!!!!"
+      return @end = true
+    end
   end
 
   def create_space(word)    
