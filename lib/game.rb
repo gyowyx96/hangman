@@ -1,19 +1,21 @@
-require_relative "functions.rb"
+# frozen_string_literal: true
+
+require_relative 'functions'
 require 'yaml'
 
 class Word
   include Tools
   include Display
-  
-  private
-  
-  def initialize
-    variable   
-    pick_a_word
-    @@code = @code.split("")
-  end 
 
-  def pick_a_word    
+  private
+
+  def initialize
+    variable
+    pick_a_word
+    @@code = @code.split('')
+  end
+
+  def pick_a_word
     word = @@dictionary.sample
     word.length > 6 ? @code = word : pick_a_word
   end
@@ -22,9 +24,9 @@ end
 class Game < Word
   include Tools
   include Display
-  
-  private 
-  
+
+  private
+
   def initialize
     code = Word.new
     variable
@@ -38,22 +40,20 @@ class Savings < Game
   include Tools
   include Display
 
-  public
-
   def initialize
     variable
-    play_loaded_game    
+    play_loaded_game
   end
 
-  private 
+  private
 
   def loading
-    @@code = []  
+    @@code = []
     get_saved_files
-    @saved_variables = YAML.load(File.read(@filename))
+    @saved_variables = YAML.safe_load(File.read(@filename))
     @saved_variables.each_index do |index|
       case index
-      when 0 
+      when 0
         @@code = @saved_variables[0]
       when 1
         @alphabet = @saved_variables[1]
@@ -70,27 +70,27 @@ class Savings < Game
   end
 
   def get_saved_files
-    saved = Dir.open("saved").children
+    saved = Dir.open('saved').children
     if saved.empty?
       puts "No savings found, play a new game!\n"
       puts @red_separator
       return Game.new
-    end 
-    saved.each_with_index do |file, index|
-      print "#{index+1}) #{file}\n"
     end
-    print"Choose the file by typing the relative number: "
+    saved.each_with_index do |file, index|
+      print "#{index + 1}) #{file}\n"
+    end
+    print 'Choose the file by typing the relative number: '
     get_file(saved)
-    @filename = "saved/#{@filename}"    
+    @filename = "saved/#{@filename}"
   end
 
   def get_file(saved)
     index = gets.chomp.to_i
     if saved[index - 1].nil?
-      print "Wrong input, try again: "
+      print 'Wrong input, try again: '
       get_file(saved)
     else
-      @filename = saved[index - 1] 
+      @filename = saved[index - 1]
     end
   end
 
@@ -104,6 +104,6 @@ class Savings < Game
   end
 
   def remove_loaded_file(filename)
-      File.delete(filename)    
+    File.delete(filename)
   end
 end

@@ -85,59 +85,58 @@ class String
 end
 
 module Tools
-
   def variable
     @@dictionary = File.open('dictionary.txt').to_a
     @hangman_word = []
-    @alphabet = ("a".."z").to_a
+    @alphabet = ('a'..'z').to_a
     @used_letters = []
     @tries = 6
-    @separator = "                                                          ".bg_cyan
-    @red_separator = "                                                          ".bg_red
-    @end = false    
+    @separator = '                                                          '.bg_cyan
+    @red_separator = '                                                          '.bg_red
+    @end = false
   end
 
   private
 
   def save(code)
-    Dir.mkdir("saved") unless Dir.exist?("saved")
+    Dir.mkdir('saved') unless Dir.exist?('saved')
 
-    print "What name do you wanna give to yours saves: "
+    print 'What name do you wanna give to yours saves: '
     name = gets.chomp
     filename = "saved/load_#{name}.yaml"
 
     saved_variables = [code, @alphabet, @tries, @hangman_word, @used_letters]
-    
-    File.open(filename, "w") { |file| file.write(saved_variables.to_yaml) }
+
+    File.open(filename, 'w') { |file| file.write(saved_variables.to_yaml) }
   end
 
   def ask_for_letter(code)
     @letter = gets.chomp.to_s.downcase
-    if @letter == "save"
+    if @letter == 'save'
       puts "\nSaving...."
       save(code)
       exit
     end
     if @letter.length != 1 || !@alphabet.include?(@letter)
-      print "\nWrong input, or used letter, try again: "      
-     return ask_for_letter(code)
+      print "\nWrong input, or used letter, try again: "
+      return ask_for_letter(code)
     end
     @alphabet.delete(@letter)
     @letter
-  end 
+  end
 
   def play_game(code)
-    until @tries == 0 || @end == true do
+    until @tries == 0 || @end == true
       puts "\nTry left: #{@tries}\n\n"
-      print "Give me a letter: "
+      print 'Give me a letter: '
       ask_for_letter(code)
-      play_round(@letter,code)      
+      play_round(@letter, code)
     end
-    if @end == false
+    return unless @end == false
+
     print "Loooooser!\nThis was the secret word: "
     show_code(code)
     puts @red_separator
-    end
   end
 
   def play_round(letter, code)
@@ -148,56 +147,54 @@ module Tools
     puts
     puts @separator
   end
-
 end
 
 module Display
-
   private
 
   def update_diplay(input, code)
     if code.include?(input)
       @used_letters.push(input.green)
-      print "Nice, it was inside the misteryous word: "
+      print 'Nice, it was inside the misteryous word: '
       show_space(@used_letters)
       code.each_with_index { |letter, index| @hangman_word[index] = letter if letter == input }
     else
       @used_letters.push(input.red)
-      print "SHIP it wasnt inside the word: "
-      show_space(@used_letters)        
+      print 'SHIP it wasnt inside the word: '
+      show_space(@used_letters)
     end
     puts
     show_space(@hangman_word)
   end
 
   def update_tries(input, code)
-    @tries -= 1 if !code.include?(input)
+    @tries -= 1 unless code.include?(input)
   end
 
   def show_space(code)
-    code.each {|word| print "#{word} "}
+    code.each { |word| print "#{word} " }
     puts
   end
-  
+
   def show_code(code)
-    puts code.join("")
+    puts code.join('')
   end
 
   def win_condition(code, input)
     code.delete("\n")
-    code = code.join("")
-    input = input.join("")
-    if code == input
-      puts @red_separator
-      puts "\nHAI VINTO!!!!!!!"
-      return @end = true
-    end
+    code = code.join('')
+    input = input.join('')
+    return unless code == input
+
+    puts @red_separator
+    puts "\nYOU WON!!!"
+    @end = true
   end
 
-  def create_space(word)    
-    space = word.length - 1 
+  def create_space(word)
+    space = word.length - 1
     space.times do
-      @hangman_word.push("_")
+      @hangman_word.push('_')
     end
     @hangman_word
   end
