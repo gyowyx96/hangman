@@ -32,7 +32,6 @@ class Game < Word
     variable
     show_space(create_space(@@code))
     play_game(@@code)
-    replay
   end
 end
 
