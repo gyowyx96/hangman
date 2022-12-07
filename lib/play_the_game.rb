@@ -5,11 +5,13 @@ require_relative 'game'
 require 'yaml'
 
 class PlayTheGame < Savings
+  include Tools
+  include Helper
   def initialize
-    puts "Choose if you wanna load a game or create a new one:
-          1) New Game
-          2) Load Game"
+    show_rules
+    puts "\nChoose if you wanna load a game or create a new one: 1) New Game, 2) Load Game"
     select_mode
+    system 'clear'
     Game.new if @choice == '1'
     Savings.new if @choice == '2'
   end
