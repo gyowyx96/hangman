@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# colors
 class String
   def black
     "\e[30m#{self}\e[0m"
@@ -86,6 +87,7 @@ class String
   end
 end
 
+# module that contains most of the game functions
 module Tools
   def variable
     @@dictionary = File.open('dictionary.txt').to_a
@@ -104,9 +106,9 @@ module Tools
   def save(code)
     Dir.mkdir('saved') unless Dir.exist?('saved')
 
-    print 'What name do you wanna give to yours saves: '
-    name = gets.chomp
-    filename = "saved/load_#{name}.yaml"
+    print 'What name do you wanna give to your file: '
+    name = gets.chomp.rstrip
+    filename = "saved/#{name}.yaml"
 
     saved_variables = [code, @alphabet, @tries, @hangman_word, @used_letters]
 
@@ -115,13 +117,8 @@ module Tools
 
   # wait for an input of the player and check it
   def ask_for_letter(code)
-    @letter = gets.chomp.to_s.downcase
-    if @letter == 'save'
-      puts "\nSaving...."
-      save(code)
-      exit
-    end
-    exit if @letter == 'quit'
+    @letter = gets.chomp.to_s.downcase.rstrip
+    check_input(@letter, code)
     if @letter.length != 1 || !@alphabet.include?(@letter)
       print "\nWrong input, or used letter, try again: "
       return ask_for_letter(code)
@@ -130,11 +127,21 @@ module Tools
     @letter
   end
 
+  # check if the typed input was a command like save/quit
+  def check_input(letter, code)
+    if letter == 'save'
+      puts "\nSaving...."
+      save(code)
+      exit
+    end
+    exit if letter == 'quit'
+  end
+
   # let you play the game for a pre-imposted number of rounds
   def play_game(code)
+    hanging_man
     until @tries.zero? || @end == true
-      puts "\nTry left: #{@tries}\n\n"
-      print 'Type a letter to play, save, or quit: '
+      print "\nType a letter to play, save, or quit: "
       ask_for_letter(code)
       play_round(@letter, code)
     end
@@ -148,6 +155,7 @@ module Tools
 
   def play_round(letter, code)
     puts
+    system 'clear'
     update_tries(letter, code)
     update_diplay(letter, code)
     win_condition(code, @hangman_word)
@@ -156,23 +164,94 @@ module Tools
   end
 end
 
+# update display methods
 module Display
+  def hanging_man
+    @tries6 = '
+          _____
+          |   |
+          |   ◉
+          |  /|\
+          |  / \
+        __|__
+        '
+    @tries5 = '
+          _____
+          |   |
+          |   ◉
+          |  /|\
+          |  /
+        __|__
+        '
+    @tries4 = '
+          _____
+          |   |
+          |   ◉
+          |  /|\
+          |
+        __|__
+        '
+
+    @tries3 = '
+          _____
+          |   |
+          |   ◉
+          |  /|
+          |
+        __|__
+        '
+    @tries2 = '
+          _____
+          |   |
+          |   ◉
+          |   |
+          |
+        __|__
+        '
+
+    @tries1 = '
+          _____
+          |   |
+          |   ◉
+          |
+          |
+        __|__
+        '
+    @tries0 = '
+          _____
+          |   |
+          |
+          |
+          |
+        __|__
+        '
+    @hangman_array = [@tries6, @tries5, @tries4, @tries3, @tries2, @tries1, @tries0]
+  end
+
   private
 
   # update the display after the move of the player
   def update_diplay(input, code)
-    if code.include?(input)
-      @used_letters.push(input.green)
-      print 'Nice, it was inside the misteryous word: '
-      show_space(@used_letters)
-      code.each_with_index { |letter, index| @hangman_word[index] = letter if letter == input }
-    else
-      @used_letters.push(input.red)
-      print 'SHIP it wasnt inside the word: '
-      show_space(@used_letters)
-    end
+    code.include?(input) ? included_in_code(input, code) : not_included_in_code(input)
     puts
     show_space(@hangman_word)
+  end
+
+  # if the letter typed is included it respond to this
+  def included_in_code(input, code)
+    @used_letters.push(input.green)
+    print 'Nice, it was inside the misteryous word: '
+    show_space(@used_letters)
+    puts @hangman_array[@tries]
+    code.each_with_index { |letter, index| @hangman_word[index] = letter if letter == input }
+  end
+
+  # if is not included instead respond to this
+  def not_included_in_code(input)
+    @used_letters.push(input.red)
+    print 'SHIP it wasnt inside the word: '
+    show_space(@used_letters)
+    puts @hangman_array[@tries]
   end
 
   def update_tries(input, code)
@@ -218,14 +297,37 @@ module Display
     upper = '            '.bg_red
     text = 'YOU LOST'.blue
     red = ' '.bg_red
+    puts
     puts "#{upper}\n#{red}          #{red}\n#{red} #{text} #{red}\n#{red}          #{red}\n#{upper}"
   end
 
   def replay
     print 'Do you wanna play again? y/n: '
     asked_input = gets.chomp.capitalize!.slice(0)
-    return puts 'It was a pleasure to play with you bye bye !' unless asked_input == 'Y'
-
+    if asked_input == 'N'
+      puts 'It was a pleasure to play with you bye bye !'
+      exit
+    end
+    system 'clear'
     Game.new
+  end
+end
+
+# helper method module
+module Helper
+  def show_rules
+    system 'clear'
+    variable
+    colored_red = 'Game-Rules'.red
+    print @separator
+    puts @red_separator
+    puts "\n                                                      #{colored_red}\n
+    Hangman is a guessing game against the pc.
+    A word that exist will be generated automatically by the pc.
+    Your objective is to identify that word within a certain number of guesses.
+    You can guess only one letter per turn and if it is wrong the number of tries will be decreased.
+    If you reach 0 tries you loose!\n\n"
+    print @red_separator
+    puts @separator
   end
 end
