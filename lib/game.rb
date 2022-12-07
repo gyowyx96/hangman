@@ -28,10 +28,23 @@ class Game < Word
   private
 
   def initialize
-    code = Word.new
+    Word.new
     variable
+    hanging_man
+    new_game_display
+    puts @tries0
     show_space(create_space(@@code))
     play_game(@@code)
+    @empty = false
+    replay
+  end
+
+  def new_game_display
+    return unless @empty.nil?
+
+    print @separator
+    print "\nNEW GAME\n"
+    puts @separator
   end
 end
 
@@ -42,13 +55,13 @@ class Savings < Game
   def initialize
     variable
     play_loaded_game
+    replay
   end
 
   private
 
   def loading
-    @@code = []
-    get_saved_files
+    saved_files
     @saved_variables = YAML.safe_load(File.read(@filename))
     @saved_variables.each_index do |index|
       case index
@@ -64,46 +77,34 @@ class Savings < Game
         @used_letters = @saved_variables[4]
       end
     end
-    puts @@code.join
     remove_loaded_file(@filename)
   end
 
-  def get_saved_files
+  def saved_files
     saved = Dir.open('saved').children
-    if saved.empty?
-      puts @red_separator
-      puts "No savings found, play a new game!\n"
-      puts @red_separator
-      return Game.new
-    end
-    saved.each_with_index do |file, index|
-      print "#{index + 1}) #{file}\n"
-    end
-    print 'Choose the file by typing the relative number: '
+    saved_empty?(saved)
+    display_loading_saves
+    saved.each_with_index { |file, index| print "#{index + 1}) #{file}\n" }
+    print "\nChoose the file by typing the relative number: "
     get_file(saved)
+    @@code = []
+    hanging_man
     @filename = "saved/#{@filename}"
   end
 
-  def get_file(saved)
-    index = gets.chomp.to_i
-    if saved[index - 1].nil?
-      print 'Wrong input, try again: '
-      get_file(saved)
-    else
-      @filename = saved[index - 1]
-    end
+  def saved_empty?(saved)
+    return unless saved.empty?
+
+    @empty = true
+    puts @red_separator
+    puts "No savings found, play a new game!\n"
+    puts @red_separator
+    Game.new
   end
 
-  def play_loaded_game
-    loading
-    print "\nHere is the last used words: "
-    show_space(@used_letters)
+  def display_loading_saves
+    print @red_separator
+    print "\nLOAD GAME\n"
+    puts @red_separator
     puts
-    show_space(@hangman_word)
-    play_game(@@code)
   end
-
-  def remove_loaded_file(filename)
-    File.delete(filename)
-  end
-end
